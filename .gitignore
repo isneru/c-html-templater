@@ -1,4 +1,5 @@
 # Compiled binaries
+main
 *.exe
 *.o
 *.obj
