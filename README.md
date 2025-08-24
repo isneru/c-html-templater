@@ -66,6 +66,7 @@ The current template is:
 		<h1>{{ title }}</h1>
 		<p>{{ content }}</p>
 		<img src="{{ img_src }}" alt="" />
+		<div>{{ children }}</div>
 	</body>
 </html>
 ```
@@ -87,6 +88,9 @@ and it gets rendered with the following values:
 			templating.
 		</p>
 		<img src="https://github.com/isneru.png" alt="" />
+		<div>
+			<p>This is a child element.</p>
+		</div>
 	</body>
 </html>
 ```

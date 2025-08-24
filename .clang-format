@@ -1,0 +1,11 @@
+BasedOnStyle: Google
+ColumnLimit: 120
+IndentWidth: 4
+AlignAfterOpenBracket: BlockIndent
+AlignConsecutiveMacros: Consecutive
+AlignEscapedNewlines: LeftWithLastLine
+BraceInitializerSpacing: After
+AllowShortFunctionsOnASingleLine: Inline
+SortIncludes: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
