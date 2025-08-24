@@ -17,7 +17,7 @@ A simple HTTP web server written in C with basic HTML templating support.
 - Windows: Winsock2 library (included in MinGW/TDM-GCC)
 - Make
 
-### Building and running
+### Building and running using Makefile
 
 ```
 make build
@@ -25,6 +25,14 @@ make run
 ```
 
 or just `make` to build and run in one step.
+
+### Building and running using CMake
+
+```
+cmake -S . -B build
+cmake --build build
+./build/Debug/c_html_templater
+```
 
 ### Project Structure
 
