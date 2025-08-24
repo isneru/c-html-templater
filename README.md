@@ -1,4 +1,4 @@
-# C Webserver Template
+# C HTML Templater
 
 A simple HTTP web server written in C with basic HTML templating support.
 
@@ -45,3 +45,46 @@ c-html-templater/
 - Place your static files in the root directory.
 - Use `{{ variable }}` syntax in HTML files for templating.
 - Define template variables in `main.c`.
+
+## Current Demo
+
+Visit `http://localhost:3000` to see the server in action.
+
+The current template is:
+
+```html
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>{{ title }}</title>
+	</head>
+	<body>
+		<h1>{{ title }}</h1>
+		<p>{{ content }}</p>
+		<img src="{{ img_src }}" alt="" />
+	</body>
+</html>
+```
+
+and it gets rendered with the following values:
+
+```html
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Hello from C!</title>
+	</head>
+	<body>
+		<h1>Hello from C!</h1>
+		<p>
+			This is a simple web server written in C, supporting basic HTML
+			templating.
+		</p>
+		<img src="https://github.com/isneru.png" alt="" />
+	</body>
+</html>
+```
