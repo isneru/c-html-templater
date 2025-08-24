@@ -1,9 +1,15 @@
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <winsock2.h>
 
 #include "server.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <dirent.h>
+#endif
 
 typedef struct {
   const char* key;
@@ -93,8 +99,13 @@ void handle_request(HttpRequest* req, SOCKET client_fd) {
 
   char path_buffer[512];
   const char* uri = req->uri;
-  if (uri[0] == '/') uri++;  // Remove leading slash for relative path
-  snprintf(path_buffer, sizeof(path_buffer), "%s", uri);
+  // If root, map to current directory
+  if (strcmp(uri, "/") == 0) {
+    snprintf(path_buffer, sizeof(path_buffer), ".");
+  } else {
+    if (uri[0] == '/') uri++;  // Remove leading slash for relative path
+    snprintf(path_buffer, sizeof(path_buffer), "%s", uri);
+  }
 
   struct stat st;
   if (stat(path_buffer, &st) == -1) {
@@ -102,6 +113,113 @@ void handle_request(HttpRequest* req, SOCKET client_fd) {
     return;
   }
 
+  // Check if path is a directory
+  int is_dir = 0;
+#ifdef _WIN32
+  is_dir = (st.st_mode & _S_IFDIR) != 0;
+#else
+  is_dir = S_ISDIR(st.st_mode);
+#endif
+
+  if (is_dir) {
+    // Try to serve index.html
+    char index_path[512];
+    snprintf(index_path, sizeof(index_path), "%s%sindex.html", path_buffer,
+             (path_buffer[strlen(path_buffer) - 1] == '/' ? "" : "/"));
+    struct stat index_st;
+    if (stat(index_path, &index_st) == 0) {
+      FILE* f = fopen(index_path, "rb");
+      if (f) {
+        char* content = malloc(index_st.st_size + 1);
+        if (content) {
+          size_t read_bytes = fread(content, 1, index_st.st_size, f);
+          content[index_st.st_size] = '\0';
+          fclose(f);
+          if (read_bytes == index_st.st_size) {
+            char* rendered = render_template_multi(content, templates, t_count);
+            char header[256];
+            snprintf(header, sizeof(header),
+                     "HTTP/1.1 %s\r\nContent-Type: "
+                     "text/html\r\nContent-Length: %lld\r\n\r\n",
+                     HTTP_200, (long long)strlen(rendered));
+            send(client_fd, header, (int)strlen(header), 0);
+            send(client_fd, rendered, (int)strlen(rendered), 0);
+            free(content);
+            free(rendered);
+            return;
+          }
+          free(content);
+        }
+        fclose(f);
+      }
+    }
+    // No index.html, list files in directory (OS-agnostic)
+    char html[4096];
+    snprintf(
+        html, sizeof(html),
+        "<html><head><title>Directory "
+        "listing</title></head><body><h1>Directory listing for /%s</h1><ul>",
+        uri);
+#ifdef _WIN32
+    WIN32_FIND_DATA findFileData;
+    char search_path[512];
+    snprintf(search_path, sizeof(search_path), "%s%s*", path_buffer,
+             (path_buffer[strlen(path_buffer) - 1] == '/' ? "" : "/"));
+    HANDLE hFind = FindFirstFile(search_path, &findFileData);
+    if (hFind != INVALID_HANDLE_VALUE) {
+      do {
+        if (strcmp(findFileData.cFileName, ".") == 0 ||
+            strcmp(findFileData.cFileName, "..") == 0)
+          continue;
+        int entry_is_dir =
+            (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 1 : 0;
+        snprintf(html + strlen(html), sizeof(html) - strlen(html),
+                 "<li><a href=\"%s/%s\">%s%s</a></li>", uri,
+                 findFileData.cFileName, findFileData.cFileName,
+                 entry_is_dir ? "/" : "");
+      } while (FindNextFile(hFind, &findFileData));
+      FindClose(hFind);
+    }
+#else
+    DIR* dir = opendir(path_buffer);
+    if (dir) {
+      struct dirent* entry;
+      while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+          continue;
+        // Check if entry is a directory
+        char entry_path[512];
+        snprintf(entry_path, sizeof(entry_path), "%s%s%s", path_buffer,
+                 (path_buffer[strlen(path_buffer) - 1] == '/' ? "" : "/"),
+                 entry->d_name);
+        struct stat entry_st;
+        int entry_is_dir = 0;
+        if (stat(entry_path, &entry_st) == 0) {
+#ifdef _WIN32
+          entry_is_dir = (entry_st.st_mode & _S_IFDIR) != 0;
+#else
+          entry_is_dir = S_ISDIR(entry_st.st_mode);
+#endif
+        }
+        snprintf(html + strlen(html), sizeof(html) - strlen(html),
+                 "<li><a href=\"%s/%s\">%s%s</a></li>", uri, entry->d_name,
+                 entry->d_name, entry_is_dir ? "/" : "");
+      }
+      closedir(dir);
+    }
+#endif
+    strcat(html, "</ul></body></html>");
+    char header[256];
+    snprintf(header, sizeof(header),
+             "HTTP/1.1 %s\r\nContent-Type: text/html\r\nContent-Length: "
+             "%lld\r\n\r\n",
+             HTTP_200, (long long)strlen(html));
+    send(client_fd, header, (int)strlen(header), 0);
+    send(client_fd, html, (int)strlen(html), 0);
+    return;
+  }
+
+  // If not a directory, serve file as before
   FILE* f = fopen(path_buffer, "rb");
   if (!f) {
     send(client_fd, NOT_FOUND, (int)strlen(NOT_FOUND), 0);
