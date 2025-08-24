@@ -51,24 +51,36 @@ int start_server(int port) {
     socket_t server_fd;
     struct sockaddr_in address;
     int opt = 1;
+    int max_port = port + 100;
+    int bound = 0;
 
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(port);
+    for (int try_port = port; try_port <= max_port; ++try_port) {
+        address.sin_family = AF_INET;
+        address.sin_addr.s_addr = INADDR_ANY;
+        address.sin_port = htons(try_port);
 
-    server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0) {
-        perror("socket() error");
-        exit(EXIT_FAILURE);
-    }
+        server_fd = socket(AF_INET, SOCK_STREAM, 0);
+        if (server_fd < 0) {
+            perror("socket() error");
+            exit(EXIT_FAILURE);
+        }
 #ifdef _WIN32
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+        int exclusive = 1;
+        setsockopt(server_fd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (const char*)&exclusive, sizeof(exclusive));
 #else
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+        setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 #endif
 
-    if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
-        perror("bind() error");
+        if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) == 0) {
+            bound = 1;
+            port = try_port;
+            break;
+        } else {
+            CLOSESOCKET(server_fd);
+        }
+    }
+    if (!bound) {
+        fprintf(stderr, "No available port found in range %d-%d\n", port, max_port);
         exit(EXIT_FAILURE);
     }
 
@@ -77,6 +89,7 @@ int start_server(int port) {
         exit(EXIT_FAILURE);
     }
 
+    log_info("Server started: http://127.0.0.1:%d", port);
     return server_fd;
 }
 
@@ -392,10 +405,7 @@ void parse_request(char* request_buffer, HttpRequest* req) {
 }
 
 void serve_forever(int PORT) {
-    // Removed unused variables
-
     socket_t server_fd = start_server(PORT);
-    log_info("Server started: http://127.0.0.1:%d", PORT);
 
     // ACCEPT connections
     while (1) {
@@ -403,7 +413,6 @@ void serve_forever(int PORT) {
         socklen_t addrlen = sizeof(clientaddr);
         socket_t client_fd = accept(server_fd, (struct sockaddr*)&clientaddr, &addrlen);
         if (client_fd < 0) continue;
-        // log client connection
 
         char request_buffer[8192];
         int n = recv(client_fd, request_buffer, sizeof(request_buffer), 0);
