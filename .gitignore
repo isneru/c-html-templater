@@ -1,0 +1,34 @@
+# Compiled binaries
+*.exe
+*.o
+*.obj
+*.dll
+*.so
+*.out
+
+# Build folders
+/build/
+/bin/
+
+# VS Code settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# Backup files
+*.bak
+*.swp
+*.swo
+
+# Generated files
+*.map
