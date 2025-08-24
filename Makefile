@@ -9,3 +9,6 @@ main: build
 
 build:
 	gcc main.c server.c -o main $(LDFLAGS)
+
+run:
+	./main

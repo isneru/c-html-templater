@@ -17,17 +17,14 @@ A simple HTTP web server written in C with basic HTML templating support.
 - Windows: Winsock2 library (included in MinGW/TDM-GCC)
 - Make
 
-### Build
+### Building and running
 
 ```
 make build
+make run
 ```
 
-### Run
-
-```
-make
-```
+or just `make` to build and run in one step.
 
 ### Project Structure
 

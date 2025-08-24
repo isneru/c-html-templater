@@ -1,10 +1,10 @@
 #include "server.h"
 
-Template templates[] = {
+const Template templates[] = {
     {"title", "Hello from C!"},
     {"content", "This is a simple web server written in C, supporting basic HTML templating."},
     {"img_src", "https://github.com/isneru.png"},
-    {"children", "<p>This is a child element.</p>"}
+    {"children", "<p>This is a child element.</p>"},
 };
 
 const TemplateContext ctx = {templates, .count = sizeof(templates) / sizeof(templates[0])};
