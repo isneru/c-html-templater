@@ -32,40 +32,42 @@ void log_info(const char *format, ...) {
 }
 
 int start_server(int port) {
-  SOCKET server_fd;
-  char option = 1;
-  struct sockaddr_in address;
-
+#ifdef _WIN32
   WSADATA wsaData;
-  int iResult;
-  // Initialize Winsock
-  iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-  if (iResult != 0) {
-    printf("WSAStartup failed with error: %d\n", iResult);
-    return 1;
+  if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+    fprintf(stderr, "WSAStartup failed\n");
+    return -1;
   }
+#endif
 
-  // create socket
+  socket_t server_fd;
+  struct sockaddr_in address;
+  int opt = 1;
+
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(port);
 
-  server_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-  if (server_fd == -1) {
+  server_fd = socket(AF_INET, SOCK_STREAM, 0);
+  if (server_fd < 0) {
     perror("socket() error");
     exit(EXIT_FAILURE);
   }
-  setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &option, sizeof(option));
+#ifdef _WIN32
+  setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char *)&opt,
+             sizeof(opt));
+#else
+  setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+#endif
 
-  if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) == -1) {
+  if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
     perror("bind() error");
     exit(EXIT_FAILURE);
   }
 
-  // listen for incoming connections
-  if (listen(server_fd, 100) != 0) {
+  if (listen(server_fd, 100) < 0) {
     perror("listen() error");
-    exit(1);
+    exit(EXIT_FAILURE);
   }
 
   return server_fd;
@@ -106,26 +108,25 @@ void parse_request(char *request_buffer, HttpRequest *req) {
 }
 
 void serve_forever(int PORT) {
-  int clientfd;
   char buffer[2048];
   int n;
 
-  int server_fd = start_server(PORT);
-  log_info("Server started: 127.0.0.1:%d", PORT);
+  socket_t server_fd = start_server(PORT);
+  log_info("Server started: http://127.0.0.1:%d", PORT);
 
   // ACCEPT connections
   while (1) {
     struct sockaddr_in clientaddr;
-    int addrlen;
-    SOCKET client_fd =
+    int addrlen = sizeof(clientaddr);
+    socket_t client_fd =
         accept(server_fd, (struct sockaddr *)&clientaddr, &addrlen);
-    if (client_fd == -1) continue;
+    if (client_fd < 0) continue;
     // log client connection
 
     char request_buffer[8192];
     int n = recv(client_fd, request_buffer, sizeof(request_buffer), 0);
 
-    if (n == -1) {
+    if (n < 0) {
       perror("read error");
     } else if (n == 0) {
       perror("client disconnected");
@@ -135,8 +136,8 @@ void serve_forever(int PORT) {
       handle_request(&req, client_fd);      // Serve the file or 404
     }
 
-    closesocket(client_fd);
+    CLOSESOCKET(client_fd);
   }
 
-  closesocket(server_fd);
+  CLOSESOCKET(server_fd);
 }

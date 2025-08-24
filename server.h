@@ -1,7 +1,18 @@
 #ifndef __server_h__
 #define __server_h__
 
+#ifdef _WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
+typedef SOCKET socket_t;
+#define CLOSESOCKET closesocket
+#else
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+typedef int socket_t;
+#define CLOSESOCKET close
+#endif
 
 #define HTTP_200 "200 OK"
 #define HTTP_204 "204 No Content"
