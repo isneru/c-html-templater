@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 
@@ -49,7 +50,7 @@ char* get_mime_type(const char* path) {
 char* render_template(const char* template, const char* key,
                       const char* value) {
   size_t template_len = strlen(template);
-  size_t key_len = strlen(key);
+  // size_t key_len = strlen(key); // Removed unused variable
   size_t value_len = strlen(value);
   char placeholder[128];
   snprintf(placeholder, sizeof(placeholder), "{{ %s }}", key);
@@ -94,7 +95,7 @@ char* render_template_multi(const char* template, Template* templates,
   return result;
 }
 
-void handle_request(HttpRequest* req, SOCKET client_fd) {
+void handle_request(HttpRequest* req, socket_t client_fd) {
   log_info("request: %s", req->uri);
 
   char path_buffer[512];
@@ -123,7 +124,7 @@ void handle_request(HttpRequest* req, SOCKET client_fd) {
 
   if (is_dir) {
     // Try to serve index.html
-    char index_path[512];
+    char index_path[1024];
     snprintf(index_path, sizeof(index_path), "%s%sindex.html", path_buffer,
              (path_buffer[strlen(path_buffer) - 1] == '/' ? "" : "/"));
     struct stat index_st;
@@ -188,7 +189,7 @@ void handle_request(HttpRequest* req, SOCKET client_fd) {
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
           continue;
         // Check if entry is a directory
-        char entry_path[512];
+        char entry_path[1024];
         snprintf(entry_path, sizeof(entry_path), "%s%s%s", path_buffer,
                  (path_buffer[strlen(path_buffer) - 1] == '/' ? "" : "/"),
                  entry->d_name);

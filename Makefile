@@ -4,8 +4,8 @@ else
 	LDFLAGS += -Wall
 endif
 
-run: main
+main: build
 	./main
 
-main:
+build:
 	gcc main.c server.c -o main $(LDFLAGS)

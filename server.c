@@ -1,6 +1,7 @@
 
 #include "server.h"
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -108,8 +109,7 @@ void parse_request(char *request_buffer, HttpRequest *req) {
 }
 
 void serve_forever(int PORT) {
-  char buffer[2048];
-  int n;
+  // Removed unused variables
 
   socket_t server_fd = start_server(PORT);
   log_info("Server started: http://127.0.0.1:%d", PORT);
@@ -117,7 +117,7 @@ void serve_forever(int PORT) {
   // ACCEPT connections
   while (1) {
     struct sockaddr_in clientaddr;
-    int addrlen = sizeof(clientaddr);
+    socklen_t addrlen = sizeof(clientaddr);
     socket_t client_fd =
         accept(server_fd, (struct sockaddr *)&clientaddr, &addrlen);
     if (client_fd < 0) continue;

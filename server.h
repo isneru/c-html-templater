@@ -38,6 +38,6 @@ typedef struct {
 void log_info(const char *format, ...);
 
 void serve_forever(int PORT);
-void handle_request(HttpRequest *request, SOCKET client_fd);
+void handle_request(HttpRequest *request, socket_t client_fd);
 
 #endif

@@ -20,6 +20,12 @@ A simple HTTP web server written in C with basic HTML templating support.
 ### Build
 
 ```
+make build
+```
+
+### Run
+
+```
 make
 ```
 
