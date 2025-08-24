@@ -7,7 +7,7 @@ A simple HTTP web server written in C with basic HTML templating support.
 - Serves static files (HTML, CSS, JS, images, documents)
 - Supports variable replacement in HTML templates (e.g., `{{ title }}`)
 - Handles 404 errors
-- Soon-to-be cross-platform (Windows, Linux (WIP))
+- OS agnostic
 
 ## Getting Started
 
@@ -15,17 +15,12 @@ A simple HTTP web server written in C with basic HTML templating support.
 
 - GCC or compatible C compiler
 - Windows: Winsock2 library (included in MinGW/TDM-GCC)
+- Make
 
-### Building on Windows
-
-```
-gcc -o main.exe main.c httpd.c -lws2_32
-```
-
-### Running on Windows
+### Build
 
 ```
-./main.exe
+make
 ```
 
 ### Project Structure
@@ -35,6 +30,7 @@ c-html-templater/
 ├─ .gitignore
 ├─ index.html
 ├─ main.c
+├─ Makefile
 ├─ server.c
 ├─ server.h
 └─ README.md
