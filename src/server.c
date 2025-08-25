@@ -1,5 +1,6 @@
 
 #include "server.h"
+#include "templater.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -13,7 +14,7 @@
 #include <winsock2.h>
 #endif
 
-extern const TemplateContext ctx;
+extern Templates ts;
 
 const char* NOT_FOUND =
     "HTTP/1.1 404 Not Found\r\n"
@@ -107,90 +108,6 @@ char* get_mime_type(const char* path) {
     return "application/octet-stream";
 }
 
-// Replace all occurrences of {{key}} in template with value
-// Internal: Replace all occurrences of {{key}} and {{ key }} in template with
-// value
-static char* render_template(const char* template, const char* key, const char* value) {
-    size_t template_len = strlen(template);
-    size_t value_len = strlen(value);
-    char placeholder1[128], placeholder2[128];
-    snprintf(placeholder1, sizeof(placeholder1), "{{%s}}", key);
-    snprintf(placeholder2, sizeof(placeholder2), "{{ %s }}", key);
-    size_t placeholder1_len = strlen(placeholder1);
-    size_t placeholder2_len = strlen(placeholder2);
-
-    // Estimate output size
-    size_t out_size = template_len + 1;
-    const char* p = template;
-    while ((p = strstr(p, placeholder1)) != NULL) {
-        out_size += value_len - placeholder1_len;
-        p += placeholder1_len;
-    }
-    p = template;
-    while ((p = strstr(p, placeholder2)) != NULL) {
-        out_size += value_len - placeholder2_len;
-        p += placeholder2_len;
-    }
-
-    char* result = malloc(out_size);
-    if (!result) return NULL;
-    result[0] = '\0';
-
-    const char* curr = template;
-    char* out = result;
-    while (1) {
-        const char* p1 = strstr(curr, placeholder1);
-        const char* p2 = strstr(curr, placeholder2);
-        const char* p = NULL;
-        size_t ph_len = 0;
-        if (p1 && (!p2 || p1 < p2)) {
-            p = p1;
-            ph_len = placeholder1_len;
-        } else if (p2) {
-            p = p2;
-            ph_len = placeholder2_len;
-        }
-        if (!p) break;
-        size_t n = p - curr;
-        memcpy(out, curr, n);
-        out += n;
-        memcpy(out, value, value_len);
-        out += value_len;
-        curr = p + ph_len;
-    }
-    strcpy(out, curr);
-    return result;
-}
-
-// Replace all occurrences of multiple {{key}} in template with their values
-// Internal: Recursively expand all keys in the context, with depth limit
-static int contains_placeholder(const char* value) {
-    return strstr(value, "{{") != NULL;
-}
-
-static char* render_template_multi_depth(const char* template, const TemplateContext* ctx, int depth) {
-    if (depth > 16) return strdup(template);  // Prevent infinite recursion
-    char* result = strdup(template);
-    for (size_t i = 0; i < ctx->count; ++i) {
-        char* expanded_value;
-        if (contains_placeholder(ctx->templates[i].value)) {
-            expanded_value = render_template_multi_depth(ctx->templates[i].value, ctx, depth + 1);
-        } else {
-            expanded_value = strdup(ctx->templates[i].value);
-        }
-        char* replaced = render_template(result, ctx->templates[i].key, expanded_value);
-        free(result);
-        free(expanded_value);
-        result = replaced;
-    }
-    return result;
-}
-
-// Public API: Render a template string using all keys in the context
-char* render_template_multi(const char* template, const TemplateContext* ctx) {
-    return render_template_multi_depth(template, ctx, 0);
-}
-
 void handle_request(HttpRequest* req, socket_t client_fd) {
     log_info("request: %s", req->uri);
 
@@ -235,7 +152,7 @@ void handle_request(HttpRequest* req, socket_t client_fd) {
                     content[index_st.st_size] = '\0';
                     fclose(f);
                     if (read_bytes == index_st.st_size) {
-                        char* rendered = render_template_multi(content, &ctx);
+                        char* rendered = render_template_multi(content, ts);
                         char header[256];
                         snprintf(
                             header, sizeof(header),
@@ -349,7 +266,7 @@ void handle_request(HttpRequest* req, socket_t client_fd) {
     const char* mime_type = get_mime_type(req->uri);
     char* rendered = NULL;
     if (strcmp(mime_type, "text/html") == 0) {
-        rendered = render_template_multi(content, &ctx);
+        rendered = render_template_multi(content, ts);
     } else {
         rendered = strdup(content);
     }

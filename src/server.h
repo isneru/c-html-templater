@@ -27,16 +27,6 @@ typedef int socket_t;
 extern const char *NOT_FOUND;
 
 typedef struct {
-    const char *key;
-    const char *value;
-} Template;
-
-typedef struct {
-    const Template *templates;
-    size_t count;
-} TemplateContext;
-
-typedef struct {
     char *key;    // Header name
     char *value;  // Header value
 } HttpHeader;
@@ -55,6 +45,5 @@ void serve_forever(int PORT);
 void handle_request(HttpRequest *request, socket_t client_fd);
 void parse_request(char *request_buffer, HttpRequest *req);
 char *get_mime_type(const char *path);
-char *render_template_multi(const char *template, const TemplateContext *ctx);
 
-#endif
+#endif  // __server_h__

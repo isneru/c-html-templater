@@ -17,6 +17,14 @@ A simple HTTP web server written in C with basic HTML templating support.
 - Windows: Winsock2 library (included in MinGW/TDM-GCC)
 - Make
 
+## Building
+
+You can build and run the project using one of the following methods:
+
+- Makefile
+- CMake
+- [Nob Build System](https://github.com/tsoding/nob.h)
+
 ### Building and running using Makefile
 
 ```
@@ -32,6 +40,16 @@ or just `make` to build and run in one step.
 cmake -S . -B build
 cmake --build build
 ./build/Debug/c_html_templater
+```
+
+### Building and running using [Nob Build System](https://github.com/tsoding/nob.h)
+
+> [!NOTE]  
+> You only need to compile nob once with `cc -o nob nob.c`, from then on it will rebuild itself if you modify `nob.c`.
+
+```
+cc -o nob nob.c
+./nob
 ```
 
 ### Project Structure

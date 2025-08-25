@@ -8,7 +8,7 @@ main: build
 	./main
 
 build:
-	gcc main.c server.c -o main $(LDFLAGS)
+	gcc src/*.c -o main $(LDFLAGS)
 
 run:
 	./main
