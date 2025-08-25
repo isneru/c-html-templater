@@ -56,12 +56,19 @@ cc -o nob nob.c
 
 ```
 c-html-templater/
-├─ .gitignore
+├─ src/
+│  ├─ main.c
+│  ├─ server.c
+│  ├─ server.h
+│  ├─ templater.c
+│  └─ templater.h
 ├─ index.html
-├─ main.c
+├─ CMakeLists.txt
 ├─ Makefile
-├─ server.c
-├─ server.h
+├─ nob.c
+├─ nob.h
+├─ .clang-format
+├─ .gitignore
 └─ README.md
 ```
 
