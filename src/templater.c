@@ -12,6 +12,16 @@ void templates_append(Templates* ts, Template t) {
     ts->items[ts->count++] = t;
 }
 
+void templates_append_many(Templates* ts, Template* templates, size_t count) {
+    for (size_t i = 0; i < count; ++i) {
+        if (ts->count == ts->capacity) {
+            ts->capacity = ts->capacity ? ts->capacity * 2 : 256;
+            ts->items = realloc(ts->items, ts->capacity * sizeof(Template));
+        }
+        ts->items[ts->count++] = templates[i];
+    }
+}
+
 // Replace all occurrences of multiple {{key}} in template with their values
 // Internal: Recursively expand all keys in the context, with depth limit
 int contains_placeholder(const char* value) {

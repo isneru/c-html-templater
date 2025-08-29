@@ -15,6 +15,7 @@ typedef struct {
 } Templates;
 
 void templates_append(Templates* ts, Template t);
+void templates_append_many(Templates* ts, Template* templates, size_t count);
 int contains_placeholder(const char* value);
 char* render_template(const char* template, const char* key, const char* value);
 char* render_template_multi_depth(const char* template, Templates ts, int depth);
