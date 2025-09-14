@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     // On POSIX
     nob_cmd_append(
         &cmd, "cc", "-Wall", "-o", BUILD_FOLDER "c_html_templater", SRC_FOLDER "main.c", SRC_FOLDER "server.c",
-        SRC_FOLDER "templater.c"
+        SRC_FOLDER "templater.c", SRC_FOLDER "html.c"
     );
 #endif
     if (!nob_cmd_run(&cmd)) return 1;

@@ -111,18 +111,23 @@ and it gets rendered with the following values:
 		<title>Hello from C!</title>
 	</head>
 	<body>
-		<div><img src="https://github.com/isneru.png" alt="isneru" /></div>
-		<div><a href="https://github.com/isneru.png">isneru</a></div>
+		<h1>Hello from C!</h1>
 		<div>
-			<p>
-				This is a simple web server written in C, supporting basic HTML
-				templating.
-			</p>
+			<img
+				src="https://github.com/isneru.png"
+				alt="isneru"
+				width="100"
+				height="100" />
+			<a href="https://github.com/isneru">isneru</a>
 		</div>
-		<div><h1>Hello from C!</h1></div>
 		<div>
-			<div>Nested div 1</div>
-			<div>Nested div 2</div>
+			<div>
+				<p>
+					This is a simple web server written in C, supporting basic HTML
+					templating.
+				</p>
+			</div>
+			<span>Nested 2</span>
 		</div>
 	</body>
 </html>

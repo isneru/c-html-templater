@@ -1,56 +1,98 @@
 #include "html.h"
 
-// TODO: generalize element creation with tag name and attributes
+Element html_element(const char* tag, HtmlAttr* attrs, size_t attr_count, const char* children) {
+    size_t attr_len = 0;
+    for (size_t i = 0; i < attr_count; ++i) {
+        attr_len += strlen(attrs[i].key) + strlen(attrs[i].value) + 4;  // key="value"
+    }
 
-const char* html_div(const char* children) {
-    size_t len = strlen(children) + strlen("<div></div>") + 1;
+    size_t len = strlen(tag) * 2 + attr_len + strlen(children) + 6;
     char* result = malloc(len);
     if (!result) return NULL;
-    snprintf(result, len, "<div>%s</div>", children);
+
+    char* attr_str = malloc(attr_len + 1);
+    if (!attr_str) {
+        free(result);
+        return NULL;
+    }
+    attr_str[0] = '\0';
+    for (size_t i = 0; i < attr_count; ++i) {
+        strcat(attr_str, " ");
+        strcat(attr_str, attrs[i].key);
+        strcat(attr_str, "=\"");
+        strcat(attr_str, attrs[i].value);
+        strcat(attr_str, "\"");
+    }
+
+    snprintf(result, len, "<%s%s>%s</%s>", tag, attr_str, children, tag);
+
+    free(attr_str);
     return result;
 }
 
-const char* html_span(const char* children) {
-    size_t len = strlen(children) + strlen("<span></span>") + 1;
+Element html_div(HtmlAttr* attrs, size_t attr_count, const char* children) {
+    return html_element("div", attrs, attr_count, children);
+}
+
+Element html_span(HtmlAttr* attrs, size_t attr_count, const char* children) {
+    return html_element("span", attrs, attr_count, children);
+}
+
+Element html_h1(HtmlAttr* attrs, size_t attr_count, const char* children) {
+    return html_element("h1", attrs, attr_count, children);
+}
+
+Element html_p(HtmlAttr* attrs, size_t attr_count, const char* children) {
+    return html_element("p", attrs, attr_count, children);
+}
+
+Element html_img(HtmlAttr* attrs, size_t attr_count, const char* src, const char* alt) {
+    size_t attr_len = 0;
+    for (size_t i = 0; i < attr_count; ++i) {
+        attr_len += strlen(attrs[i].key) + strlen(attrs[i].value) + 4;
+    }
+
+    char* attr_str = malloc(attr_len + attr_count + 1);
+    if (!attr_str) return NULL;
+
+    attr_str[0] = '\0';
+    for (size_t i = 0; i < attr_count; ++i) {
+        strcat(attr_str, " ");
+        strcat(attr_str, attrs[i].key);
+        strcat(attr_str, "=\"");
+        strcat(attr_str, attrs[i].value);
+        strcat(attr_str, "\"");
+    }
+
+    size_t len = strlen("<img src=\"\" alt=\"\" />") + strlen(src) + strlen(alt) + strlen(attr_str) + 1;
+
     char* result = malloc(len);
-    if (!result) return NULL;
-    snprintf(result, len, "<span>%s</span>", children);
+    if (!result) {
+        free(attr_str);
+        return NULL;
+    }
+
+    snprintf(result, len, "<img src=\"%s\" alt=\"%s\"%s />", src, alt, attr_str);
+
+    free(attr_str);
     return result;
 }
 
-const char* html_h1(const char* children) {
-    size_t len = strlen(children) + strlen("<h1></h1>") + 1;
-    char* result = malloc(len);
-    if (!result) return NULL;
-    snprintf(result, len, "<h1>%s</h1>", children);
+Element html_a(HtmlAttr* attrs, size_t attr_count, const char* href, const char* children) {
+    HtmlAttr* new_attrs = malloc((attr_count + 1) * sizeof(HtmlAttr));
+    if (!new_attrs) return NULL;
+
+    for (size_t i = 0; i < attr_count; ++i) {
+        new_attrs[i] = attrs[i];
+    }
+    new_attrs[attr_count] = (HtmlAttr){.key = "href", .value = href};
+
+    Element result = html_element("a", new_attrs, attr_count + 1, children);
+    free(new_attrs);
     return result;
 }
 
-const char* html_p(const char* children) {
-    size_t len = strlen(children) + strlen("<p></p>") + 1;
-    char* result = malloc(len);
-    if (!result) return NULL;
-    snprintf(result, len, "<p>%s</p>", children);
-    return result;
-}
-
-const char* html_img(const char* src, const char* alt) {
-    size_t len = strlen(src) + strlen(alt) + strlen("<img src=\"\" alt=\"\"/>") + 1;
-    char* result = malloc(len);
-    if (!result) return NULL;
-    snprintf(result, len, "<img src=\"%s\" alt=\"%s\"/>", src, alt);
-    return result;
-}
-
-const char* html_a(const char* href, const char* text) {
-    size_t len = strlen(href) + strlen(text) + strlen("<a href=\"\"></a>") + 1;
-    char* result = malloc(len);
-    if (!result) return NULL;
-    snprintf(result, len, "<a href=\"%s\">%s</a>", href, text);
-    return result;
-}
-
-const char* html_fragment(size_t count, ...) {
+Element html_fragment(size_t count, ...) {
     va_list args;
     va_start(args, count);
     size_t total_len = 1;
@@ -75,7 +117,7 @@ const char* html_fragment(size_t count, ...) {
     return result;
 }
 
-Template template_el(const char* func_name, Element (*el)(void)) {
+Template templaterize(const char* func_name, Element (*el)(void)) {
     Template t;
     t.key = func_name;
     t.value = el();

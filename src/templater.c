@@ -79,6 +79,13 @@ char* render_template(const char* template, const char* key, const char* value) 
     return result;
 }
 
+int template_contains_key(const char* template, const char* key) {
+    char placeholder1[128], placeholder2[128];
+    snprintf(placeholder1, sizeof(placeholder1), "{{%s}}", key);
+    snprintf(placeholder2, sizeof(placeholder2), "{{ %s }}", key);
+    return strstr(template, placeholder1) || strstr(template, placeholder2);
+}
+
 char* render_template_multi_depth(const char* template, Templates ts, int depth) {
     if (depth > 16) return strdup(template);  // Prevent infinite recursion
     char* result = strdup(template);
@@ -99,5 +106,13 @@ char* render_template_multi_depth(const char* template, Templates ts, int depth)
 
 // Render a template string using all keys in the context
 char* render_template_multi(const char* template, Templates ts) {
-    return render_template_multi_depth(template, ts, 0);
+    char* result = strdup(template);
+    for (size_t i = 0; i < ts.count; ++i) {
+        if (template_contains_key(result, ts.items[i].key)) {
+            char* replaced = render_template(result, ts.items[i].key, ts.items[i].value);
+            free(result);
+            result = replaced;
+        }
+    }
+    return result;
 }
