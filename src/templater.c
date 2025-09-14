@@ -1,9 +1,5 @@
 #include "templater.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 void templates_append(Templates* ts, Template t) {
     if (ts->count == ts->capacity) {
         ts->capacity = ts->capacity ? ts->capacity * 2 : 256;

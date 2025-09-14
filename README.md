@@ -57,6 +57,8 @@ cc -o nob nob.c
 ```
 c-html-templater/
 ├─ src/
+│  ├─ html.c
+│  ├─ html.h
 │  ├─ main.c
 │  ├─ server.c
 │  ├─ server.h
@@ -93,10 +95,7 @@ The current template is:
 		<title>{{ title }}</title>
 	</head>
 	<body>
-		<h1>{{ title }}</h1>
-		<p>{{ content }}</p>
-		<img src="{{ img_src }}" alt="" />
-		<div>{{ children }}</div>
+		{{ root }}
 	</body>
 </html>
 ```
@@ -112,14 +111,18 @@ and it gets rendered with the following values:
 		<title>Hello from C!</title>
 	</head>
 	<body>
-		<h1>Hello from C!</h1>
-		<p>
-			This is a simple web server written in C, supporting basic HTML
-			templating.
-		</p>
-		<img src="https://github.com/isneru.png" alt="" />
+		<div><img src="https://github.com/isneru.png" alt="isneru" /></div>
+		<div><a href="https://github.com/isneru.png">isneru</a></div>
 		<div>
-			<p>This is a child element.</p>
+			<p>
+				This is a simple web server written in C, supporting basic HTML
+				templating.
+			</p>
+		</div>
+		<div><h1>Hello from C!</h1></div>
+		<div>
+			<div>Nested div 1</div>
+			<div>Nested div 2</div>
 		</div>
 	</body>
 </html>

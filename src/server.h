@@ -1,8 +1,18 @@
 #ifndef __server_h__
 #define __server_h__
 
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+
 #ifdef _WIN32
 #include <stdio.h>
+#include <winsock2.h>
+#include <windows.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>

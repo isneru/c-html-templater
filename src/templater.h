@@ -1,6 +1,9 @@
 #ifndef __templater_h__
 #define __templater_h__
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stddef.h>
 
 typedef struct {
